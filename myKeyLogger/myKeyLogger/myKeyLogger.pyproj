@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>13e29254-3d95-471b-8258-77c535d4bd41</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>durationComparer.py</StartupFile>
+    <StartupFile>DataAnalyzer\durationComparer.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,25 +22,27 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="analyzer.py">
+    <Compile Include="DataAnalyzer\analyzer.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="durationComparer.py">
+    <Compile Include="DataAnalyzer\durationComparer.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="durationGenerator.py">
+    <Compile Include="DataAnalyzer\durationFilter.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="myKeyLogger.py" />
-    <Compile Include="parseFile.py">
+    <Compile Include="DataAnalyzer\durationGenerator.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="test.py">
+    <Compile Include="KeyLogger\myKeyLogger.py" />
+    <Compile Include="DataAnalyzer\parseFile.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="test2.py">
-      <SubType>Code</SubType>
-    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DataAnalyzer\Durations\" />
+    <Folder Include="KeyLogger\" />
+    <Folder Include="DataAnalyzer\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

@@ -1,4 +1,3 @@
-from parseFile import *
 import matplotlib.pyplot as plt
 import statistics
 
@@ -28,21 +27,25 @@ def build_durations_list(key_events):
             durations.append(key_events[i+1].time - key_events[i].time)
     return durations
 
-def analyze_durations(events, languages=[HEBREW, ENGLISH]):
-    events = filter_by_language(events)
+def analyze_durations(events, filter):
     key2events = build_key2events(events)
+    #filter events
+    key2events = {key:filter.filter_events(key_events) for key,key_events in key2events.items()}
+
     key2durations = {key:build_durations_list(key_events) for key,key_events in key2events.items()}
+    #filter durations
+    key2durations = {key:filter.filter_durations(durations) for key,durations in key2durations.items()}
     key2info = {key:Duration(durations, key) for key,durations in key2durations.items()}
     return key2info
 
-def plot_duration_histogram(key_events, languages=[ENGLISH], n_bins=40, graph_title="", filter=True):
-    events = filter_by_language(key_events, languages)
-    durations = build_durations_list(events)
-    if filter:
-        durations = filter_outliers(durations)
-    plt.hist(durations, n_bins) #n, bins, patches = plt.hist(durations, n_bins)
-    plt.title(graph_title)
-    plt.show()
+#def plot_duration_histogram(key_events, languages=[ENGLISH], n_bins=40, graph_title="", filter=True):
+#    events = filter_by_language(key_events, languages)
+#    durations = build_durations_list(events)
+#    if filter:
+#        durations = filter_outliers(durations)
+#    plt.hist(durations, n_bins) #n, bins, patches = plt.hist(durations, n_bins)
+#    plt.title(graph_title)
+#    plt.show()
 
 
 
