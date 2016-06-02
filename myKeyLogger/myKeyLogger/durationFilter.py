@@ -5,12 +5,15 @@ ENGLISH = 1033
 ALL_LANGUAGES = [HEBREW, ENGLISH]
 
 class Filter:
-    def __init__(self, languages=ALL_LANGUAGES, stdev_factor=2.5):
+    def __init__(self, languages=ALL_LANGUAGES, stdev_factor=2.5, keywords=[]):
         self.languages = languages
         self.stdev_factor = stdev_factor
+        self.keywords = keywords
 
     def filter_events(self, events):
-        return filter_by_language(events, self.languages)
+        events = filter_by_language(events, self.languages)
+        events = filter_by_program(events, self.keywords)
+        return events
 
     def filter_durations(self,duration_times):
         data = filter_outliers(duration_times, self.stdev_factor)
@@ -34,3 +37,9 @@ def filter_outliers(data, stdev_factor=2.5):
 
 def filter_by_language(events, languages=ALL_LANGUAGES):
     return [ev for ev in events if ev.language in languages]
+
+def filter_by_program(events, keywords):
+    if keywords:
+        return [ev for ev in events if sum([(word in ev.window_name) for word in keywords])]
+    else: #dont filter
+        return events 

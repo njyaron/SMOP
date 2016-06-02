@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>13e29254-3d95-471b-8258-77c535d4bd41</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>DataAnalyzer\durationComparer.py</StartupFile>
+    <StartupFile>resultsParagraphAnalysis.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,27 +22,52 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DataAnalyzer\analyzer.py">
+    <Compile Include="analyzer.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataAnalyzer\durationComparer.py">
+    <Compile Include="digraphComparer.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataAnalyzer\durationFilter.py">
+    <Compile Include="digraphFilter.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DataAnalyzer\durationGenerator.py">
+    <Compile Include="digraphGenerator.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="durationComparer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="durationFilter.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="durationGenerator.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="resultsDataGathering.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="resultsParagraphAnalysis.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="testing.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="trigraphArray.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="trigraphFilter.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="trigraphGenerator.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="KeyLogger\myKeyLogger.py" />
-    <Compile Include="DataAnalyzer\parseFile.py">
+    <Compile Include="parseFile.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DataAnalyzer\Durations\" />
     <Folder Include="KeyLogger\" />
-    <Folder Include="DataAnalyzer\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

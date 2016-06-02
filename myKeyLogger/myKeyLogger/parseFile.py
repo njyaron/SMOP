@@ -37,8 +37,8 @@ def load_all_uniform_sessions(path):
     " Returns all uniform sessions "
     directories = [os.path.join(path,o) for o in os.listdir(path) 
                    if os.path.isdir(os.path.join(path,o))]
-    events = [sessions for directory in directories for sessions in load_uniform_sessions(directory)] 
-    return events
+    sessions = [session for directory in directories for session in load_uniform_sessions(directory)] 
+    return sessions
 
 def load_uniform_sessions(path):
     " Returns all uniform sessions in this directory "

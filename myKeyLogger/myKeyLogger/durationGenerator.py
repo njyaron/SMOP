@@ -5,8 +5,9 @@ class Duration:
     def __init__(self, data, key):
         self.key = key
         self.count = len(data)
-        if self.count > 1:
+        if self.count:
             self.mean = statistics.median(data)
+        if self.count > 1:
             self.stdev = statistics.stdev(data)
 
 def build_key2events(events):
@@ -47,12 +48,4 @@ def analyze_durations(events, filter):
 #    plt.title(graph_title)
 #    plt.show()
 
-
-
-#MINIMUM_COUNT = 100
-#original_events = load_standard_session(path)
-#key2events = build_key2events(original_events)
-#key2durations = {key:build_durations_list(key_events) for key,key_events in key2events.items()}
-#keys = [key for key in key2durations.keys() if len(key2durations[key]) > MINIMUM_COUNT]
-#keys = sorted(keys, key=lambda key: -len(key2durations[key]) )
 
