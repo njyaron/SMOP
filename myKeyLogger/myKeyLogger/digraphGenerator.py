@@ -9,6 +9,7 @@ class Digraph:
         if self.count > 1:
             self.stdev = statistics.stdev(data)
 
+
 def build_keys2events(events):
     keys2events = dict()
     for i in range(len(events)):
