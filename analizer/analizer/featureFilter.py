@@ -21,8 +21,19 @@ class Filter:
         times = filter_outliers(times, self.stdev_factor)
         return times
 
+    def filter_sample_events(self, events):
+        events = filter_sample_by_language(events, self.languages)
+        events = filter_sample_by_program(events, self.keywords)
+        return events
+
+    def is_good_time(self, time): 
+        "Returns true if the time is not a long_time"
+        return time < self.long_time
+ 
+
+
 def filter_long_times(data, long_time=1.0):
-    return [x for x in data if x < long_time]
+    return [x for x in data if x < long_time and x > 0]
 
 def filter_outliers(data, stdev_factor=2.5):
     #stdev_factor - how many stdevs from the median is still legit
@@ -52,10 +63,10 @@ def filter_by_language(events, languages=ALL_LANGUAGES):
             filtered.append( evs )
     return filtered
 
-def contains_some_words(test, keywords):
-    return sum([(word in text) for word in keywords]) > 0
+def contains_some_words(text, keywords):
+    return (sum([(word in text) for word in keywords]) > 0)
 
-def filter_by_program(event_couples, keywords):
+def filter_by_program(events, keywords):
     filtered = list()
     for evs in events:
         should_filter = True
@@ -71,3 +82,16 @@ def filter_by_program(event_couples, keywords):
                 filtered2.append( evs )
         filtered = filtered2
     return filtered
+
+
+def filter_sample_by_language(events, languages=ALL_LANGUAGES):
+    if languages:
+        return [ev for ev in events if ev.language in languages]
+    else:
+        return events
+
+def filter_sample_by_program(events, keywords):
+    if keywords:
+        return [ev for ev in events if contains_some_words(ev.window_name, keywords)]
+    else:
+        return events

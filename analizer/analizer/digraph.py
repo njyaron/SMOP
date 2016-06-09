@@ -1,4 +1,5 @@
-ORD_MINIMUM_COUNT = 20
+ORD_MINIMUM_COUNT = 12
+LONG_TIME = 0.45
 
 def build_digraph_keys2events(events):
     keys2events = dict()

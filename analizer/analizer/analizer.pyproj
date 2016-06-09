@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>9e70a559-370c-4fb0-b8a4-2d1f4f3c1565</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>analizer.py</StartupFile>
+    <StartupFile>testing.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,7 +22,44 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="analizer.py" />
+    <Compile Include="digraph.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="digraphRatio.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="duration.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="featureComparer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="featureGenerator.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="featureFilter.py" />
+    <Compile Include="oldTesting.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="parseFile.py" />
+    <Compile Include="resultsBackgroundGeneral.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="resultsComparer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="resultsDataGathering.py" />
+    <Compile Include="resultsFilterProgram.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="resultsParagraphAnalysis.py" />
+    <Compile Include="testing.py" />
+    <Compile Include="trigraph.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="trigraphArray.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

@@ -1,37 +1,58 @@
 import parseFile
 import featureGenerator
 
-import os
+import os, math
 
 #compare all users
-results_directory = "Results"
-main_directory = r'F:\Clouds\Google Drive\SMOP Data'
+results_directory = parseFile.results_directory
+main_directory = parseFile.main_directory
+
+class Sample:
+    def __init__(self, name, events, filters, feature_types):
+        self.name = name
+        self.feature_types = feature_types
+        #analyze (including filtering)
+        self.features = list() #list of format: [ (key, time), (key, time), ...]
+        for filter, feature_type in zip(filters, self.feature_types):
+            self.features.extend(featureGenerator.analyze_sample(events, filter, feature_type))
+
+
 
 class Person:
-    def __init__(self, name, path, filter, feature_type, is_uniform = False):
+    def __init__(self, name, events, filters, feature_types, is_uniform):
         self.name = name
-        self.path = path
-        self.feature_type = feature_type
-        #load events
-        results_path = os.path.join(path, results_directory)
-        events = [] #made this temp value
-        if os.path.exists(results_path):
-            if is_uniform:
-                sessions = [session for kind,index,session in parseFile.load_all_uniform_sessions(results_path)]
-                events = [ev for session in sessions for ev in session]
-            else:
-                events = parseFile.load_all_standard_sessions(results_path)
+        self.feature_types = feature_types
         #analyze (including filtering)
-        self.features = featureGenerator.analyze(events, filter, feature_type)
+        self.features = dict()
+        for filter, feature_type in zip(filters, self.feature_types):
+            self.features.update(featureGenerator.analyze(events, filter, feature_type, is_uniform))
         
-    def get_feature_names(self):
-        return {key for key, feature in self.features.items() if feature.is_good()}
+    def get_feature_names(self, feature_types=featureGenerator.ALL_TYPES):
+        return {key for key, feature in self.features.items() 
+                if feature.is_good() and feature.feature_type in feature_types}
 
     def is_feature_good(self, feature_name):
         return feature_name in self.features and self.features[feature_name].is_good()
 
+    def get_similarity(self, sample):
+        weights = 0
+        value = 0
+        for feature_name, feature_value in sample.features:
+            if self.is_feature_good(feature_name):
+                feature = self.features[feature_name]
+                weights += feature.trust
+                if feature.probability_of(feature_value) != 0.0:
+                    value += feature.trust * math.log(feature.probability_of(feature_value))
+                else:
+                    value += feature.trust * (-600) #math.log(math.exp(-700))
+        if weights:
+            return value / weights
+        else:
+            return -200 #Default bad number
+
+
 def are_different(feature1, feature2):##TODO: maybe change criteria, to be type-dependent
-    return abs(feature1.mean - feature2.mean) > (feature1.stdev + feature2.stdev) / 2 
+    return abs(feature1.mean - feature2.mean) > (feature1.stdev + feature2.stdev)
 
 def compare_two_people(person1, person2):
     common_features_names = person1.get_feature_names().intersection(person2.get_feature_names())
@@ -57,17 +78,32 @@ def count_users_containing_feature(people, feature_name):
 
 
 
-def generate_people(filter):
+def generate_people(filters, feature_types, is_uniform=False):
+    default_filter = filters[0] #should all be identical
     people = []
     for name in os.listdir(main_directory):
         print("Building " + name)
         path = os.path.join(main_directory, name)
         if os.path.isdir(path):
-            people.append(Person(name, path, filter, is_uniform=False))
+            events, _ = parseFile.get_events(path, default_filter, is_uniform, with_sample=False)
+            people.append(Person(name, events, filters, feature_types, is_uniform))
     return people
 
-def get_all_feature_names(people):
-    return set().union(*[person.get_feature_names() for person in people])
+def generate_people_samples(filters, feature_types, is_uniform=False):
+    default_filter = filters[0] #should all be identical
+    people, samples = [], []
+    for name in os.listdir(main_directory):
+        print("Building " + name)
+        path = os.path.join(main_directory, name)
+        if os.path.isdir(path):
+            events, sample_events = parseFile.get_events(path, default_filter, is_uniform, with_sample=True)
+            people.append(Person(name, events, filters, feature_types, is_uniform))
+            samples.append(Sample(name, sample_events, filters, feature_types))
+    return people, samples
+
+
+def get_all_feature_names(people, feature_types=featureGenerator.ALL_TYPES):
+    return set().union(*[person.get_feature_names(feature_types) for person in people])
 
 def print_good_features(people, minimal_frequency = 3, minimal_quality = 0.2):
     feature_names = get_all_feature_names(people)
@@ -78,3 +114,6 @@ def print_good_features(people, minimal_frequency = 3, minimal_quality = 0.2):
             feature_quality = count_differentialbe_couples(people, feature_name) / possible_couples
             if feature_quality > minimal_quality:
                 print(feature_name, feature_frequency, feature_quality)
+
+
+

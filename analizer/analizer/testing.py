@@ -1,143 +1,235 @@
 import parseFile
+import featureFilter
+import featureGenerator
+import featureComparer
+import duration, digraph, trigraph, digraphRatio
 
-import os
+import pickle, os, math
+import matplotlib.pyplot as plt
 
-results_directory = "Results"
-main_directory = r'F:\Clouds\Google Drive\SMOP Data'
+results_directory = parseFile.results_directory
+main_directory = parseFile.main_directory
 
-#get which programs are common
-programs = dict()
 
-for name in os.listdir(main_directory):
+def build_database(filename, keywords=[], languages=featureFilter.ALL_LANGUAGES,update=False):
+    filters = [featureFilter.Filter(long_time=duration.LONG_TIME,keywords=keywords, languages=languages),
+               featureFilter.Filter(long_time=digraph.LONG_TIME,keywords=keywords, languages=languages),
+               featureFilter.Filter(long_time=trigraph.LONG_TIME,keywords=keywords, languages=languages),
+               featureFilter.Filter(long_time=digraphRatio.LONG_TIME,keywords=keywords, languages=languages),
+               ] 
+
+    feature_types = featureGenerator.ALL_TYPES
+    people, samples = featureComparer.generate_people_samples(filters,feature_types,is_uniform=False)
+
+    if update:
+        import pickle
+        loc = r"F:\Clouds\Dropbox\SMOP\AnalysisCompressed\people_"+filename+".p"
+        pickle.dump( people, open( loc, "wb+" ) )
+        loc = r"F:\Clouds\Dropbox\SMOP\AnalysisCompressed\samples_"+filename+".p"
+        pickle.dump( samples, open( loc, "wb+" ) )
+
+    return people, samples 
+    
+
+people, samples = build_database("eclipse",keywords=('java', 'Java', 'Eclipse', 'IntelliJ', 'IDEA'),languages=[featureFilter.ENGLISH],update=True)
+
+for sample in samples:
+    fit = [(person.get_similarity(sample),person.name) for person in people]
+    fit = sorted(fit,reverse=True)
+    idx = [n for v,n in fit].index(sample.name)
+    print(sample.name, idx, fit[:5])
+
+
+
+
+#choose the names of people i want to test
+names = ['Gal Oz-Ari', 'Gil Boazi', 'Nir Yaron', 'Guy Levanon', 'Yonathan Schwammenthal', 'Matan Levine', 'Ohad Ben-Or', 'Dor Aharonson', 'Yuval Itkin', 'Yonatan Caspi', 'Noam Greenberg', 'Adi Asher', 'Yovel Rom']
+
+#filter and get feature arrays for them
+keywords = ('java', 'Java', 'Eclipse', 'IntelliJ', 'IDEA')
+languages = [featureFilter.ENGLISH]
+filters = [featureFilter.Filter(long_time=duration.LONG_TIME,keywords=keywords),
+            featureFilter.Filter(long_time=digraph.LONG_TIME,keywords=keywords),
+            featureFilter.Filter(long_time=trigraph.LONG_TIME,keywords=keywords),
+            featureFilter.Filter(long_time=digraphRatio.LONG_TIME,keywords=keywords),
+            ] 
+feature_types = featureGenerator.ALL_TYPES
+people = dict() #name:[time1, time2, time3...]
+for name in names:
     print("Building " + name)
-    results_path = os.path.join(main_directory, name, results_directory)
-    if os.path.exists(results_path):
-        events = parseFile.load_all_standard_sessions(results_path)
-        for ev in events:
-            if ev.window_name not in programs:
-                programs[ev.window_name] = 0
-            programs[ev.window_name] += 1
-
-#get most common words in the window names
-import re
-def get_words(text):
-    return re.compile('\w+').findall(text)
-
-main_keywords = dict()
-for p,v in programs.items():
-    for word in get_words(p):
-        if word not in main_keywords:
-            main_keywords[word] = 0
-        main_keywords[word] += v
-
-k = sorted(main_keywords.items(), key=lambda it: -it[1])
-
-#check for specially famous programs
-def filter_by_program(events, keywords):
-    return [ev for ev in events if sum([(word in ev.window_name) for word in keywords])]
-
-def get_users_with(keywords):
-    user_with = dict()
-    for name in os.listdir(main_directory):
-        print("Building " + name)
-        results_path = os.path.join(main_directory, name, results_directory)
-        if os.path.exists(results_path):
-            events = parseFile.load_all_standard_sessions(results_path)
-            #events = durationFilter.filter_by_program(events, keywords)
-            events = filter_by_program(events, keywords)
-            if events:
-                user_with[name] = len(events)
-    return user_with
-
-special_keywords = [ ["WhatsApp"],
-                    ["Eclipse", "IntelliJ"],
-                    ["Word", "PowerPoint"],
-                    ["README"],
-                    ["py", "PyCharm"],
-                    ]
-for keywords in special_keywords:
-    user_with = get_users_with(keywords)
-    print("keystrokes for users with " + str(keywords))
-    print(str(len(user_with)) + " users: " + str(user_with))
-
-#temp
-keywords = ["WhatsApp"]#["Word", "PowerPoint"]
-user_with = get_users_with(keywords)
-print("keystrokes for users with " + str(keywords))
-print(str(len(user_with)) + " users: " + str(user_with))
-
-
-user_with = dict()
-for name in os.listdir(main_directory):
-    print("Building " + name)
-    results_path = os.path.join(main_directory, name, results_directory)
-    if os.path.exists(results_path):
-        events = parseFile.load_all_standard_sessions(results_path)
-        events = [ev for ev in events if ("Google" in ev.window_name and "Chrome" not in ev.window_name)]
-        if events:
-            user_with[name] = len(events)
-
-
-
-#total keystrokes: 1822664  -   sum([v for p,v in programs.items()])
-
-#keystrokes for users with ["WhatsApp"]:
-#7(6) users: {'Yotam Sali': 462, 'Shachar Baron': 493, 'Dor Aharonson': 7939, 'Nir Yaron': 14290, 'Omer Deutsch': 2466, 'Adi Asher': 2622, 'Ohad Ben-Or': 134}
-
-#keystrokes for users with ["Eclipse", "IntelliJ"]:
-#6 users: {'Yovel Rom': 50986, 'Guy Levanon': 103889, 'Dor Aharonson': 86460, 'Nir Yaron': 149578, 'Adi Asher': 27565, 'Matan Levine': 162313}
-
-#keystrokes for users with ['Word', 'PowerPoint']
-#17 users: {'Efi Sapir': 1410, 'Yotam Sali': 17768, 'Shachar Baron': 2480, 'Harel Gelfand': 1996, 'Alon Gal': 11826, 'Omer Deutsch': 27946, 'Adi Asher': 9231, 'Ohad Ben-Or': 1459, 'Nimrod Rind': 1379, 'Yovel Rom': 3321, 'Guy Levanon': 2587, 'Dor Aharonson': 16578, 'Nir Yaron': 64673, 'Matan Seri': 7098, 'Itay Efraim': 2031, 'Matan Levine': 15274, 'Noam Shapira': 1442}
-
-#keystrokes for users with ["PowerPoint"]:
-#9 users: {'Yovel Rom': 340, 'Shachar Baron': 981, 'Harel Gelfand': 629, 'Alon Gal': 6474, 'Nir Yaron': 1036, 'Matan Seri': 795, 'Adi Asher': 1695, 'Matan Levine': 10752}
-
-#keystrokes for users with ["README"]:
-#6(4) users: {'Yovel Rom': 21598, 'Guy Levanon': 28774, 'Dor Aharonson': 10801, 'Alon Gal': 4, 'Nir Yaron': 34859, 'Matan Levine': 4}
-
-
-#java 527500 Eclipse 449259 Java 429352 IDEA 131454 IntelliJ 131454
-#README 96040
-#Google 435000 Chrome 377849 (Almost always both, so take on "Chrome")
-#Word 136194 docx 75392 #PowerPoint 22149 [decided to merge them]
-#gmail 96322 Inbox 63828 Gmail 32600
-#py 80265 PyCharm 68960 PycharmProjects 33709 [4 ppl, but hopefully will grow]
-#WhatsApp 25940 Web 26156
-
-
-#OOP 337467 Ex5 327405 - contained in "java"
-#Dropbox 164892 - nothing to do with
-#Microsoft 161396 - almost just Word and PowerPoint
-#Visual 82851 Studio 82847 - only me 
-
-#count uniforms
-people = []
-for name in os.listdir(main_directory):
-    c = 0
     path = os.path.join(main_directory, name)
-    results_path = os.path.join(path, results_directory)
-    if os.path.isdir(results_path):
-        for d in os.listdir(results_path):
-            if os.path.isdir(os.path.join(results_path,d)):
-                for f in os.listdir(os.path.join(results_path,d)):
-                    if "UNIFORM" in f:
-                           c += 1
+    events, _ = parseFile.get_events(path, filters[0], is_uniform=False, with_sample=False)
+    people[name] = dict()
+    for filter, feature_type in zip(filters, feature_types):
+        keys2data = featureGenerator.create_data(events,filter,feature_type)
+        people[name].update( keys2data )#{key:data for key,data in keys2data.items() if key in chosen_keys})
 
-    people.append( (c,name) )
+loc = r"F:\Clouds\Dropbox\SMOP\AnalysisCompressed\eclipse_english_people2key2data.p"
+pickle.dump( people, open( loc, "wb+" ) )
 
-print(sorted(people, reverse=True))
+#find best features (most common of each type)
+def best_keys2(people, feature_type):
+    #for people from featureGenerator.create_data
+    keys = dict()
+    for p in people.values():
+        for k,li in p.items():
+            if k[-1] == feature_type:
+                if k not in keys:
+                    keys[k] = 0
+                keys[k] += len(li)
+    keys = sorted(list(keys.items()), key=lambda x:-x[1])
+    return keys
+
+options_best_keys_digraph = best_keys2(people, featureGenerator.DIGRAPH_TYPE)
+
+def key_occurances_in_people(people, key):
+    #for people from build_key2data
+    return [(name,len(key2data[key])) for name,key2data in people.items()]
+
+#after using this
+for key,v in options_best_keys_digraph[:8]:
+    print(key_occurances_in_people(people, key))
+
+keys_digraph = [('e', 'r', 1), ('f', 'i', 1), ('i', 'n', 1), ('t', 'h', 1)]
+
+#for one person:
+name = "Gal Oz-Ari"
+person = people[name]
+#split for training+sample(last 10% of array)
+training = {key:li[:-len(li)//10] for key,li in person.items()}
+sample = {key:li[-len(li)//10:] for key,li in person.items()}
+
+#draw both historgrams and hope to see similar things
+for key in keys_digraph:
+    plt.hist(training[key], bins=10,normed=True)
+    plt.hist(sample[key], bins=10,normed=True)
+    plt.show()
+
+#if works, do the same for a few people and hope to see differences
+temp_names = ['Gal Oz-Ari', 'Gil Boazi', 'Nir Yaron', 'Guy Levanon', 'Yonathan Schwammenthal']
+temp_people = [people[name] for name in temp_names]
+for key in keys_digraph:
+    for person in temp_people:
+        plt.hist(person[key], bins=10,normed=True,alpha=0.6)
+    plt.show()
+
+name1,name2 = 'Nir Yaron', 'Yonatan Caspi'
+training = {key:li[:-len(li)//10] for key,li in people[name1].items()}
+imposture = people[name2]
+sample = {key:li[-len(li)//10:] for key,li in people[name1].items()}
+temp_people = [training, imposture, sample]
+for key in keys_digraph:
+    for person in temp_people:
+        plt.hist(person[key], bins=10,normed=True,alpha=0.6)
+    plt.show()
 
 
+#if works: try to define parameters that distinguish people
+import statistics
+temp_names = ['Gal Oz-Ari', 'Gil Boazi', 'Nir Yaron', 'Guy Levanon', 'Yonathan Schwammenthal', 'Matan Levine', 'Ohad Ben-Or', 'Dor Aharonson', 'Yuval Itkin', 'Yonatan Caspi', 'Noam Greenberg', 'Adi Asher', 'Yovel Rom']
+temp_people = [people[name] for name in temp_names]+[sample]
 
-#all keys in keyboard
-keys = set()
-for name in os.listdir(main_directory):
-    print("Building " + name)
-    results_path = os.path.join(main_directory, name, results_directory)
-    if os.path.exists(results_path):
-        events = parseFile.load_all_standard_sessions(results_path)
-        keys = keys.union({nm for ev in events for nm in ev.names })
+for key in keys_digraph:
+    print(key)
+    for person in temp_people:
+        print(statistics.mean(person[key]), statistics.stdev(person[key]))
+        #print(statistics.stdev(person[key]))
 
-#keys = {'end', 'd', 'v', '7', 'right alt', 'home', 'esc', 'f5', '`', 'page down', '[', 'f11', 'right shift', 'b', 'm', 'p', 'q', 'ץ', '3', 'c', '8', 'u', 'g', 'enter', '\\', '9', 's', 'down', 'f1', "'", 'j', 'f9', 'y', 'f3', '.', 'f', 'insert', '4', 'f2', 'delete', 'break', 'f4', 'k', 'application', 'i', ',', 'f10', 'page up', 'ף', 'z', '*', 'f8', 'a', '5', 'print screen', 'sys req', '2', 't', '0', 'l', 'left windows', 'ת', 'right ctrl', 'windows', 'tab', 'f12', 'r', 'alt', 'space', 'w', '/', 'n', 'scroll lock', '=', '6', 'e', '1', 'shift', 'right windows', 'f7', 'left', ']', ';', 'o', 'right', '<00>', '+', 'backspace', 'up', 'x', 'ctrl', 'f6', 'caps lock', '-', 'del', 'h'}
-#then i chose keys = {'d', 'v', 'right alt', '[', 'right shift', 'b', 'm', 'p', 'q', 'c', 'u', 'g', 'enter', '\\', 's', "'", 'j', 'y', '.', 'f', 'k', 'i', ',', 'z', '*', 'a', 't', 'l', 'right ctrl', 'tab', 'r', 'alt', 'space', 'w', '/', 'n', '=', 'e', 'shift', ']', ';', 'o', '+', 'x', 'ctrl', '-', 'h'}
+#now try to estimate how close each person is to the sample
+temp_names = ['Gal Oz-Ari', 'Gil Boazi', 'Nir Yaron', 'Guy Levanon', 'Yonathan Schwammenthal', 'Matan Levine', 'Ohad Ben-Or', 'Dor Aharonson', 'Yuval Itkin', 'Yonatan Caspi', 'Noam Greenberg', 'Adi Asher', 'Yovel Rom']
+temp_people = [people[name] for name in temp_names]
+d = [0 for p in temp_people]
+for key in keys_digraph:
+    for i,person in enumerate(temp_people):
+        d[i] += abs(statistics.mean(sample[key]) - statistics.mean(person[key]))
+print(sorted([(v,i) for i,v in enumerate(d)]))
+
+#do this for each sample
+trainings = {name:{key:li[:-len(li)//10] for key,li in key2data.items()} for name, key2data in people.items()}
+samples = {name:{key:li[-len(li)//10:] for key,li in key2data.items()} for name, key2data in people.items()}
+for j,sample in enumerate(samples.values()):
+    d = [0 for p in trainings]
+    for key in keys_digraph:
+        for i,person in enumerate(trainings.values()):
+            d[i] += abs(statistics.mean(sample[key]) - statistics.mean(person[key]))
+    print(j)
+    print(sorted([(v,i) for i,v in enumerate(d)]))
+
+#now try with more features and hope for better accuracy
+keys_digraph = [k for k,v in options_best_keys_digraph[:30] if not sum( [k not in key2data for key2data in people.values()]) ]
+trainings = {name:{key:li[3:] for key,li in key2data.items()} for name, key2data in people.items()}
+samples = {name:{key:li[:3] for key,li in key2data.items()} for name, key2data in people.items()}
+for j,sample in enumerate(samples.values()):
+    d = [0 for p in trainings]
+    for key in keys_digraph:
+        for i,person in enumerate(trainings.values()):
+            d[i] += abs(statistics.mean(sample[key]) - statistics.mean(person[key]))
+    print(j)
+    print(sorted([(v,i) for i,v in enumerate(d)]))
+
+
+#understand why Caspi and Nir are similar - because the last data on Caspi is bad
+name1,name2 = 'Yonatan Caspi', 'Nir Yaron'
+training = {key:li[30:] for key,li in people[name1].items()}
+imposture = people[name2]
+sample = {key:li[:30] for key,li in people[name1].items()}
+temp_people = [training, imposture, sample]
+for key in keys_digraph:
+    for person in temp_people:
+        plt.hist(person[key], bins=10,normed=True,alpha=0.6)
+    plt.show()
+
+
+for key in keys_digraph:
+    print(key)
+    for person in temp_people:
+        print(statistics.mean(person[key]), statistics.stdev(person[key]))
+
+for key in keys_digraph:
+    print(key)
+    for person in [training, imposture]:
+        abs(statistics.mean(sample[key]) - statistics.mean(person[key]))
+
+    d = [0 for p in trainings]
+    for key in keys_digraph:
+        for i,person in enumerate(trainings.values()):
+            d[i] += abs(statistics.mean(sample[key]) - statistics.mean(person[key]))
+    print(j)
+    print(sorted([(v,i) for i,v in enumerate(d)]))
+
+
+#now we'll try to make a bigger sample-base
+def get_samples_idxs(li, sample_count, sample_size):
+    if len(li) > sample_count * sample_size:
+        return [(len(li)//sample_count*j,len(li)//sample_count*j+sample_size+1)
+                for j in range(sample_count)]
+    else:
+        raise Exception("List too short")
+
+keys_digraph = [k for k,v in options_best_keys_digraph[:30] if not sum( [not (k in key2data and len(key2data[k])>30) for key2data in people.values()]) ]
+sample_count, sample_size = 4,5
+trainings = dict() #{name: {key:li, key:...}, name:...}
+samples = dict() #{name: {key:[li, li,..], key:...}, name:...}
+for name, key2data in people.items():
+    trainings[name] = dict()
+    samples[name] = [dict() for i in range(sample_count)]
+    for key in keys_digraph:
+        li = key2data[key]
+        trainings[name][key] = list()
+        idxs = get_samples_idxs(li,sample_count,sample_size)+[(len(li),len(li))]
+        for i in range(len(idxs)-1):
+            samples[name][i][key] = li[idxs[i][0]:idxs[i][1]]
+            trainings[name][key].extend(li[idxs[i][1]:idxs[i+1][0]])
+
+#now run on all:
+for name, many_samples in samples.items():
+    print(name)
+    for sample in many_samples:
+        d = [0 for p in trainings]
+        for key in keys_digraph:
+            for i,person in enumerate(trainings.values()):
+                d[i] += abs(statistics.mean(sample[key]) - statistics.mean(person[key]))
+        d = sorted(list(zip(d,trainings.keys())))
+        if name != d[0][1]:
+            print(d)
+#still 100%

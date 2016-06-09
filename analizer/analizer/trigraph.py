@@ -1,4 +1,5 @@
-ORD_MINIMUM_COUNT = 15
+ORD_MINIMUM_COUNT = 8
+LONG_TIME = 0.95
 
 def build_trigraph_keys2events(events):
     keys2events = dict()

@@ -1,4 +1,5 @@
 ORD_MINIMUM_COUNT = 40
+LONG_TIME = 0.21
 
 def build_duration_key2events(events):
     keys2events = dict()
@@ -12,11 +13,11 @@ def build_duration_key2events(events):
             if j < len(events) and events[j].event_type=='up':
                 ev2 = events[j]
             if ev1.names and ev2 and ev2.names: #sometimes they are not 
-                key = ev1.names[-1]
+                key = (ev1.names[-1],)
                 if key not in keys2events:
                     keys2events[key] = list()
                 keys2events[key].append((ev1, ev2))
     return keys2events
 
-def build_durations_list(key_events):
-    return [ev2.time - ev1.time for ev1, ev2 in keys_events]
+def build_durations_list(events):
+    return [ev2.time - ev1.time for ev1, ev2 in events]

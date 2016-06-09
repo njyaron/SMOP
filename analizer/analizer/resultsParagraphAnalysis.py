@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 people = trigraphArray.load_all()
 
 # distribution of similarity in sessions from the same person, for some users
-names = ['Nir Yaron', 'Yovel Rom', 'Itay Efraim', 'Guy Levanon', 'Adi Asher']
+names = ['Nir Yaron', 'Adi Asher', 'Yovel Rom', 'Guy Levanon']
 for name in names:
     person = [p for p in people if p.name == name][0]
     plt.hist(person.vars)

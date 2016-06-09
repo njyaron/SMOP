@@ -2,7 +2,11 @@ import pickle
 import os
 DEFAULT_PREFIX = 'data_'
 UNIFORM_PREFIX = 'UNIFORM'
+SAMPLE_SIZE = 4000
 
+results_directory = "Results"
+main_directory = r'F:\Clouds\Google Drive\SMOP Data'
+#main_directory = r'F:\Nir\Temp\SMOPlimited'
 
 def get_filelist(path, prefix):
     " Returns list of all files starting with the given prefrix"
@@ -45,3 +49,34 @@ def load_uniform_sessions(path):
     only_uniform_files = get_filelist(path, UNIFORM_PREFIX)
     sessions = read_pickle_files(path, only_uniform_files)
     return sessions
+
+def split_sample_training(events, filter, is_uniform):
+    """Returns (training_events, sample_events) from the given events, 
+    after some basic filtering"""
+    if not is_uniform:
+        filtered_events = filter.filter_sample_events(events)
+        length = min(len(filtered_events)//4, SAMPLE_SIZE)
+        sample_start = (len(filtered_events) - length)//2
+        sample_end = sample_start + length
+
+        sample_events = filtered_events[sample_start:sample_end]
+        training_events = filtered_events[:sample_start] + filtered_events[sample_end:]
+
+        return training_events, sample_events
+    else:
+        pass #TODO: take the last session
+
+def get_events(person_path, filter, is_uniform, with_sample=False):
+    results_path = os.path.join(person_path, results_directory)
+    events = []
+    if os.path.exists(results_path):
+        if is_uniform:
+            sessions = [session for kind,index,session in parseFile.load_all_uniform_sessions(results_path)]
+            events = [ev for session in sessions for ev in session]
+        else:
+            events = load_all_standard_sessions(results_path)
+
+    if with_sample:
+        return split_sample_training(events, filter, is_uniform)
+    else:
+        return events, list()
